@@ -1,0 +1,7 @@
+scipy
+scikit-image
+opencv-python
+dlib
+keras
+flask
+flask_cors
