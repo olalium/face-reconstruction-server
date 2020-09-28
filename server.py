@@ -1,10 +1,15 @@
 import os
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, jsonify
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
+import sys
+sys.path.append('face-reconstruction')
+from predictor import Predictor
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 # Max size of content is 2MB (1MB per image)
+
+predictor = Predictor()
 
 UPLOAD_FOLDER = '/images'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -33,6 +38,11 @@ def predict_face():
         app.logger.info("one filename is invalid")
     filename_image1 = secure_filename(image1.filename)
     filename_image2 = secure_filename(image2.filename)
+    app.logger.info("going in boyys")
+    predictor.predict_face_from_images(image1, image2, app)
+    app.logger.info(os.listdir())
+    
+    return jsonify(filename_image1), 200
     
 
 if __name__ == '__main__':
