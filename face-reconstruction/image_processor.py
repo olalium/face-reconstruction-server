@@ -74,4 +74,3 @@ class ImageProcessor(object):
     def concat_images(self, image1, image2):
         concat_images = np.concatenate((image1, image2), axis=2)
         return concat_images
-  

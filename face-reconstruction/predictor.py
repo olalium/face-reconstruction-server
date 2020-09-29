@@ -1,9 +1,12 @@
 import os
 
+import redis
+import time
+import json
 import numpy as np
 from skimage.io import imread, imsave
 from skimage.transform import rescale, estimate_transform, warp
-
+from utils import base64_decode_image
 from networks import MobilenetPosPredictor
 from image_processor import ImageProcessor
 
@@ -12,6 +15,10 @@ FACE_IND_PATH = 'Data/uv-data/face_ind.txt'
 EXTRA_FACE_IND_PATH = 'Data/uv-data/extra_bfm_ind.txt'
 BFM_KPT_IND = 'Data/uv-data/bfm_kpt_ind.txt'
 MODEL_PATH = 'Data/net-data/trained_fg_then_real.h5'
+
+SLEEP = 1.0
+
+db = redis.StrictRedis(host="redis", port=6379, db=0)
 
 class Predictor(object):
     def __init__(self):
@@ -49,32 +56,38 @@ class Predictor(object):
 
         write_obj_with_colors(obj_name, save_vertices, self.triangles, colors)
 
-    def predict_face_from_images(self, image1, image2, app):
-        app.logger.info("im in boyys")
+    def predict_face_from_images(self, image1, image2):
         cropped_image1, crop_tform1 = self.image_processor.get_cropped_image(image1)
-        app.logger.info("im in boyys1")
         cropped_image2, crop_tform2 = self.image_processor.get_cropped_image(image2)
-        app.logger.info("im in boyys2")
+
         concatenated_images = self.image_processor.concat_images(cropped_image1, cropped_image2)
-        app.logger.info("im in boyys3")
         
         cropped_pos = self.pos_predictor.predict(concatenated_images)
-        app.logger.info("im in boyys4")
         pos = self.image_processor.uncrop_pos(cropped_pos, crop_tform1)
-        app.logger.info("im in boyys5")
 
         self.generate_and_save_obj_from_pos(pos, image1, 'temp.obj')
-        app.logger.info("im in boyys6")
 
+def main_loop():
+    print("setting up predictor")
+    predictor = Predictor()
 
+    print("entering main loop")
+    while True:
+        print("wake up")
+        data = db.rpop("image_queue")
+        if data:
+            print("data detected")
+            json_data = json.loads(data.decode("utf-8"))
+            id = json_data["id"]
+            images = json_data["images"]
+            if id and images:
+                print("trying to decode data")
+                image1 = base64_decode_image(images[0])
+                #TODO make all images same size
+                time.sleep(SLEEP*5)
+                db.set(id, json.dumps("success"))
+        print("sleep")
+        time.sleep(SLEEP)
 
-        
-
-
-
-        
-        
-
-
-            
-
+if __name__ == "__main__":
+    main_loop()

@@ -1,6 +1,23 @@
 import os
 
+import base64
+import sys
 import numpy as np
+
+def base64_encode_image(a):
+    # base64 encode the input NumPy array
+    return base64.b64encode(a).decode("utf-8")
+
+def base64_decode_image(a):
+    # if this is Python 3, we need the extra step of encoding the
+    # serialized NumPy string as a byte object
+    if sys.version_info.major == 3:
+        a = bytes(a, encoding="utf-8")
+    # convert the string to a NumPy array using the supplied data
+    # type and target shape
+    a = np.frombuffer(base64.decodestring(a))
+    # return the decoded image
+    return a
 
 def write_obj_with_colors(obj_name, vertices, triangles, colors):
     ''' Save 3D face model with texture represented by colors.

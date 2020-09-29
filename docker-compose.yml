@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+    redis:
+        image: redis
+        networks: 
+            - redis-bridge 
+    face-recon:
+        build: .
+        ports:
+            - "5000:5000"
+        networks: 
+            - redis-bridge 
+
+networks:
+    redis-bridge:
+        name: redis-bridge
