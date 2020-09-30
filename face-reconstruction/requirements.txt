@@ -4,8 +4,4 @@ opencv-python
 dlib
 tensorflow==1.15
 keras==2.3.1
-flask
-flask_cors
 redis
-requests
-gevent

@@ -1,0 +1,6 @@
+scipy
+scikit-image
+flask
+flask_cors
+redis
+requests

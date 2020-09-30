@@ -5,11 +5,15 @@ services:
         networks: 
             - redis-bridge 
     face-recon:
-        build: .
+        build: ./face-reconstruction
+        networks: 
+            - redis-bridge
+    server:
+        build: ./server
         ports:
             - "5000:5000"
         networks: 
-            - redis-bridge 
+            - redis-bridge
 
 networks:
     redis-bridge:

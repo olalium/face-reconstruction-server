@@ -18,7 +18,7 @@ MODEL_PATH = 'Data/net-data/trained_fg_then_real.h5'
 
 SLEEP = 1.0
 
-db = redis.StrictRedis(host="redis", port=6379, db=0)
+db = redis.StrictRedis(host="redis", port=6379, db=0, charset="utf-8", decode_responses=True)
 
 class Predictor(object):
     def __init__(self):
@@ -77,15 +77,16 @@ def main_loop():
         data = db.rpop("image_queue")
         if data:
             print("data detected")
-            json_data = json.loads(data.decode("utf-8"))
+            json_data = json.loads(data)
             id = json_data["id"]
+            db.set(id, "processing")
             images = json_data["images"]
             if id and images:
                 print("trying to decode data")
                 image1 = base64_decode_image(images[0])
                 #TODO make all images same size
                 time.sleep(SLEEP*5)
-                db.set(id, json.dumps("success"))
+                db.set(id, "success")
         print("sleep")
         time.sleep(SLEEP)
 
