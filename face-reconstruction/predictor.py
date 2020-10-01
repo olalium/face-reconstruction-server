@@ -3,10 +3,11 @@ import os
 import redis
 import time
 import json
+import logging
 import numpy as np
 from skimage.io import imread, imsave
 from skimage.transform import rescale, estimate_transform, warp
-from utils import base64_decode_image
+from utils import base64_decode_image, write_obj_with_colors
 from networks import MobilenetPosPredictor
 from image_processor import ImageProcessor
 
@@ -15,6 +16,7 @@ FACE_IND_PATH = 'Data/uv-data/face_ind.txt'
 EXTRA_FACE_IND_PATH = 'Data/uv-data/extra_bfm_ind.txt'
 BFM_KPT_IND = 'Data/uv-data/bfm_kpt_ind.txt'
 MODEL_PATH = 'Data/net-data/trained_fg_then_real.h5'
+FOLDER_PATH = 'objs/'
 
 SLEEP = 1.0
 
@@ -56,39 +58,43 @@ class Predictor(object):
 
         write_obj_with_colors(obj_name, save_vertices, self.triangles, colors)
 
-    def predict_face_from_images(self, image1, image2):
+    def predict_face_from_images(self, image1, image2, name):
         cropped_image1, crop_tform1 = self.image_processor.get_cropped_image(image1)
         cropped_image2, crop_tform2 = self.image_processor.get_cropped_image(image2)
 
         concatenated_images = self.image_processor.concat_images(cropped_image1, cropped_image2)
         
+        logging.info("predict pos")
         cropped_pos = self.pos_predictor.predict(concatenated_images)
+        logging.info("uncrop pos")
         pos = self.image_processor.uncrop_pos(cropped_pos, crop_tform1)
 
-        self.generate_and_save_obj_from_pos(pos, image1, 'temp.obj')
+        logging.info("generating and saving pos")
+        self.generate_and_save_obj_from_pos(pos, image1, name)
 
 def main_loop():
-    print("setting up predictor")
+    logging.info("setting up predictor")
     predictor = Predictor()
-
-    print("entering main loop")
+    
+    logging.info("entering main loop")
     while True:
-        print("wake up")
         data = db.rpop("image_queue")
         if data:
-            print("data detected")
+            logging.info("data detected")
             json_data = json.loads(data)
             id = json_data["id"]
             db.set(id, "processing")
             images = json_data["images"]
             if id and images:
-                print("trying to decode data")
+                image0 = base64_decode_image(images[0])
                 image1 = base64_decode_image(images[0])
-                #TODO make all images same size
-                time.sleep(SLEEP*5)
+                logging.info("decoded data")
+                output_path = FOLDER_PATH + id
+                predictor.predict_face_from_images(image0, image1, output_path)
                 db.set(id, "success")
-        print("sleep")
+                logging.info("success predicting and saving data")
         time.sleep(SLEEP)
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
     main_loop()

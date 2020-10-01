@@ -8,13 +8,21 @@ services:
         build: ./face-reconstruction
         networks: 
             - redis-bridge
+        tty: true
+        volumes:
+            - obj-volume:/usr/src/app/objs
     server:
         build: ./server
         ports:
             - "5000:5000"
         networks: 
             - redis-bridge
+        volumes:
+            - obj-volume:/usr/src/app/objs
 
 networks:
     redis-bridge:
         name: redis-bridge
+
+volumes:
+    obj-volume:

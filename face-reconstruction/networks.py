@@ -4,7 +4,6 @@ from keras.backend.tensorflow_backend import set_session
 from keras.utils.generic_utils import CustomObjectScope
 from keras import backend as K
 import tensorflow as tf
-print("imported (i think)")
 
 class MobilenetPosPredictor():
     def __init__(self, resolution_inp=256, resolution_op=256):
