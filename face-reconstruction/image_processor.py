@@ -1,4 +1,5 @@
 import dlib
+import logging
 import numpy as np
 from skimage.transform import rescale, estimate_transform, warp
 
@@ -33,8 +34,9 @@ class ImageProcessor(object):
     def get_cropping_transform(self, image):
         detected_faces = self.face_detector(image, 1)
         if len(detected_faces) == 0:
-            print('warning: no detected face')
+            logging.info('no detected face')
             return None
+        logging.info('face detected')
 
         d = detected_faces[0].rect  ## only use the first detected face (assume that each input image only contains one face)
         left = d.left()

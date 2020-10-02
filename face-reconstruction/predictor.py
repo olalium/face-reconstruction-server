@@ -7,7 +7,7 @@ import logging
 import numpy as np
 from skimage.io import imread, imsave
 from skimage.transform import rescale, estimate_transform, warp
-from utils import base64_decode_image, write_obj_with_colors
+from utils import base64_decode_image, write_obj_with_colors, load_and_decode_data
 from networks import MobilenetPosPredictor
 from image_processor import ImageProcessor
 
@@ -57,20 +57,18 @@ class Predictor(object):
         colors = image[ind[:, 1], ind[:, 0], :]  # n x 3
 
         write_obj_with_colors(obj_name, save_vertices, self.triangles, colors)
+        logging.info("successfully predicted and saved result")
 
-    def predict_face_from_images(self, image1, image2, name):
+    def predict_pos_from_images(self, image1, image2):
         cropped_image1, crop_tform1 = self.image_processor.get_cropped_image(image1)
         cropped_image2, crop_tform2 = self.image_processor.get_cropped_image(image2)
-
+        
         concatenated_images = self.image_processor.concat_images(cropped_image1, cropped_image2)
         
-        logging.info("predict pos")
         cropped_pos = self.pos_predictor.predict(concatenated_images)
-        logging.info("uncrop pos")
-        pos = self.image_processor.uncrop_pos(cropped_pos, crop_tform1)
 
-        logging.info("generating and saving pos")
-        self.generate_and_save_obj_from_pos(pos, image1, name)
+        pos = self.image_processor.uncrop_pos(cropped_pos, crop_tform1)
+        return pos
 
 def main_loop():
     logging.info("setting up predictor")
@@ -81,18 +79,17 @@ def main_loop():
         data = db.rpop("image_queue")
         if data:
             logging.info("data detected")
-            json_data = json.loads(data)
-            id = json_data["id"]
-            db.set(id, "processing")
-            images = json_data["images"]
-            if id and images:
-                image0 = base64_decode_image(images[0])
-                image1 = base64_decode_image(images[0])
-                logging.info("decoded data")
-                output_path = FOLDER_PATH + id
-                predictor.predict_face_from_images(image0, image1, output_path)
-                db.set(id, "success")
-                logging.info("success predicting and saving data")
+            images = load_and_decode_data(data, db)
+            if images:
+                logging.info("data decoded")
+                try:
+                    pos = predictor.predict_pos_from_images(images[0], images[1])
+                    output_path = FOLDER_PATH + id
+                    predictor.generate_and_save_obj_from_pos(pos, images[0], output_path)
+                    db.set(id, "success")
+                except:
+                    logging.warning("error while predicting and/or saving input")
+                    db.set(id, "error")
         time.sleep(SLEEP)
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import base64
 import sys
 import uuid
+import logging
 
 from skimage.transform import resize, rescale
 from skimage.io import imread, imsave
@@ -41,16 +42,18 @@ def validate_request(request):
         image = imread(file)
         if len(image.shape) != 3:
             return False, 'wrong image shape'
-        if image.shape[2] != 3:
+        if image.shape[2] != 3 and image.shape[2] != 4:
             return False, 'wrong number of image channels'
+        image = image[:,:,:3]
         images.append(image)
 
     return True, images
 
-def generate_queue_item(images):
+def generate_queue_item(images, app):
     image0 = resize_image(images[0])
     image1 = resize_image(images[1])
-
+    app.logger.info(str(image0.shape))
+    app.logger.info(str(image1.shape))
     encoded_image0 = base64_encode_image(image0)
     encoded_image1 = base64_encode_image(image1)
 

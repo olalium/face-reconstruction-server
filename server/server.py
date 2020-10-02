@@ -13,7 +13,7 @@ FOLDER_PATH = 'objs/'
 FILE_ENDING = '.obj'
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 # Max size of content is 2MB (1MB per image)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 # Max size of content is 10MB (5MB per image)
 
 db = redis.StrictRedis(host="redis", port=6379, charset="utf-8", db=0, decode_responses=True)
 
@@ -55,7 +55,7 @@ def predict_face():
         return jsonify(status=validation_response), 400
     
     try:
-        k, d = generate_queue_item(validation_response)
+        k, d = generate_queue_item(validation_response, app)
         db.rpush("image_queue", json.dumps(d))
         db.set(k, "queued")
     except:

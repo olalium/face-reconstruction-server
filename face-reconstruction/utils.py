@@ -1,10 +1,34 @@
 import os
 
 import base64
+import logging
 import sys
+import json
 import numpy as np
 
 IMAGE_SHAPE = (512, 512, 3)
+POS_SHAPE = (256, 256, 3)
+
+def load_and_decode_data(data, db):
+    try:
+        json_data = json.loads(data)
+        id = json_data["id"]
+        images = json_data["images"]
+    except:
+        db.set(id, "error_json")
+        logging.info("could not load json data")
+        return False
+    try:
+        images = []
+        for image in images:
+            decoded_image = base64_decode_image(image)
+            images.append(decoded_image)
+    except:
+        db.set(id, "error_decode")
+        logging.info("could not decode images")
+        return False
+    
+    return images
 
 def base64_decode_image(a):
     # if this is Python 3, we need the extra step of encoding the

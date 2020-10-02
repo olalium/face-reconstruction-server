@@ -1,8 +1,11 @@
+import os
+
 import keras
 import numpy as np
 from keras.backend.tensorflow_backend import set_session
 from keras.utils.generic_utils import CustomObjectScope
 from keras import backend as K
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 
 class MobilenetPosPredictor():
