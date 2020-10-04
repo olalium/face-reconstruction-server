@@ -1,5 +1,6 @@
 import os
 
+import re
 import base64
 import logging
 import sys
@@ -8,27 +9,30 @@ import numpy as np
 
 IMAGE_SHAPE = (512, 512, 3)
 POS_SHAPE = (256, 256, 3)
+UUID_PATTERN = re.compile(r'^[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}$', re.IGNORECASE)
 
+# TODO add json validation schema
 def load_and_decode_data(data, db):
     try:
         json_data = json.loads(data)
         id = json_data["id"]
+        assert UUID_PATTERN.match(id)
         images = json_data["images"]
-    except:
-        db.set(id, "error_json")
-        logging.info("could not load json data")
-        return False
-    try:
-        images = []
+        assert len(images) == 2
+
+        decoded_images = []
         for image in images:
             decoded_image = base64_decode_image(image)
-            images.append(decoded_image)
+            decoded_images.append(decoded_image)
+        return decoded_images, id
     except:
-        db.set(id, "error_decode")
-        logging.info("could not decode images")
-        return False
-    
-    return images
+        if 'images' not in locals():
+            pass
+        elif 'decoded_images' not in locals():
+            db.set(id, "error_json")
+        else:
+            db.set(id, "error_decode")
+        return False, ''
 
 def base64_decode_image(a):
     # if this is Python 3, we need the extra step of encoding the

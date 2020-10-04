@@ -79,8 +79,9 @@ def main_loop():
         data = db.rpop("image_queue")
         if data:
             logging.info("data detected")
-            images = load_and_decode_data(data, db)
-            if images:
+            images, id = load_and_decode_data(data, db)
+            if len(images) == 2:
+                db.set(id, "processing")
                 logging.info("data decoded")
                 try:
                     pos = predictor.predict_pos_from_images(images[0], images[1])
@@ -90,6 +91,8 @@ def main_loop():
                 except:
                     logging.warning("error while predicting and/or saving input")
                     db.set(id, "error")
+            else:
+                logging.info("could not decode data, passing")
         time.sleep(SLEEP)
 
 if __name__ == "__main__":

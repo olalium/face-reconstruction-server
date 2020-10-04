@@ -67,6 +67,7 @@ class ImageProcessor(object):
             
     def get_cropped_image(self, image):
         image = self.clean_image(image)
+        logging.info('cleaned images')
         crop_tform = self.get_cropping_transform(image)
         if crop_tform is None:
             return image, None
