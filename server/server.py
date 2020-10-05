@@ -31,6 +31,7 @@ def get_status(id):
     return jsonify(status=output), 200
 
 @app.route('/api/predict/result/<id>', methods= ['GET'])
+@cross_origin(origin='*', headers=['Content- Type','Authorization'])
 def get_result(id):
     if not UUID_PATTERN.match(id):
         return jsonify('invalid key'), 400
