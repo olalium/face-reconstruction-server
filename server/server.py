@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, redirect, url_for, jsonify, send_from_directory
-from flask_cors import CORS, cross_origin
+#from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 import redis
 import sys
@@ -18,7 +18,7 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 # Max size of content is 10M
 db = redis.StrictRedis(host="redis", port=6379, charset="utf-8", db=0, decode_responses=True)
 
 @app.route('/api/predict/status/<id>', methods = ['GET'] )
-@cross_origin()
+#@cross_origin()
 def get_status(id):
     if not UUID_PATTERN.match(id):
         return jsonify('invalid key'), 400
@@ -31,7 +31,7 @@ def get_status(id):
     return jsonify(status=output), 200
 
 @app.route('/api/predict/result/<id>', methods= ['GET'])
-@cross_origin(origin='*', headers=['Content- Type','Authorization'])
+#@cross_origin(origin='*', headers=['Content- Type','Authorization'])
 def get_result(id):
     if not UUID_PATTERN.match(id):
         return jsonify('invalid key'), 400
@@ -49,7 +49,7 @@ def get_result(id):
     return jsonify('invalid key'), 400
 
 @app.route('/api/predict', methods = ['POST'] )
-@cross_origin(allow_headers=['Content-Type'])
+#@cross_origin(allow_headers=['Content-Type'])
 def predict_face():
     request_is_valid, validation_response = validate_request(request)
     if not request_is_valid:

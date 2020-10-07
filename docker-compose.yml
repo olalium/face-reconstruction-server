@@ -6,6 +6,7 @@ services:
             - redis-bridge 
     face-recon:
         build: ./face-reconstruction
+        image: olalium/faceprediction:faceprediction
         networks: 
             - redis-bridge
         tty: true
@@ -13,6 +14,7 @@ services:
             - obj-volume:/usr/src/app/objs
     server:
         build: ./server
+        image: olalium/faceprediction:server
         ports:
             - "5000:5000"
         networks: 
